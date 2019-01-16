@@ -45,7 +45,7 @@ project "Default",{
 
 
 			def AgentHost = "localhost"
-			def GroupName = "group" // Artifact group name
+			def GroupName = "${args.projName}_${args.app}" // Artifact group name
 			def Tier = "App Tier"
 
 			project proj,{
