@@ -69,9 +69,9 @@ project proj,{
 						processStep \'Create Artifact Placeholder\', {
 							actualParameter = [
 								commandToRun: """\\
-										ectool createArtifact group "\\$[/myComponent/ec_content_details/artifactName]"
+										artifact artifactKey: "\\$[/myComponent/ec_content_details/artifactName]", groupId: \\"${GroupName}\\"
 									""".stripIndent(),
-								shellToUse: ""
+								shellToUse: "ectool evalDsl --dslFile"
 							]
 							applicationTierName = null
 							processStepType = \'command\'
