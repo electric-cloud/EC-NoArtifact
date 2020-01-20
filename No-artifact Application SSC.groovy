@@ -24,9 +24,11 @@ catalog 'No Artifact', {
       "instruction": "Provide details required to create the new application.",
       "ec_parameterForm": "<editor> <formElement> <label>Application Name</label> <property>app</property> <documentation>Name of the application to be created.</documentation> <type>entry</type> <required>1</required> </formElement> <formElement> <label>Project Name</label> <property>projName</property> <documentation>Name of the application and environment project. e.g. \'Default\'</documentation> <type>project</type> <required>1</required> </formElement> <formElement> <label>Component Version List</label> <property>comps</property> <value>comp1=1.0</value><documentation>Name of the components and versions to be created. On component per line, componentname=version</documentation> <type>textarea</type> <required>1</required> </formElement><formElement> <label>Environment List</label> <property>envs</property> <documentation>Name of environments to be created, comma separated.  E.g., Dev,Int,QA</documentation> <type>entry</type> <required>1</required> </formElement></editor>"
     }],
-    "endTarget": {
+	"endTarget": {
+      "source": "form",
       "object": "application",
-      "formValue": "app"
+      "objectName": "app",
+      "objectProjectName": "projName"
     }
   }
 }'''
@@ -79,7 +81,19 @@ project proj,{
 							subproject = \'/plugins/EC-Core/project\'
 						}
 					} // process
-
+					
+					process \'Uninstall\', {
+						applicationName = null
+						processType = \'UNDEPLOY\'
+						processStep 'Uninstall', {
+							actualParameter = [commandToRun: 'echo "Uninstalling $[/myComponent]"']
+							applicationTierName = null
+							processStepType = 'command'
+							subprocedure = 'RunCommand'
+							subproject = '/plugins/EC-Core/project'
+						}	
+					} // process
+					
 					property \'ec_content_details\', {
 
 						// Custom properties
@@ -109,6 +123,7 @@ project proj,{
 
 			process \'Deploy\', {
 				processType = \'OTHER\'
+				formalParameter 'ec_smartDeployOption', defaultValue: '0'
 
 				components.each { comp, ver ->
 					formalParameter "${comp}_version", defaultValue: ver
@@ -121,10 +136,22 @@ project proj,{
 						applicationTierName = Tier
 					}
 				} // each component
-				
-				
-				
 			} // process
+				
+			process \'Undeploy\', {
+				processType = \'OTHER\'
+
+				components.each { comp, ver ->
+					processStep comp, {
+						processStepType = \'process\'
+						subcomponent = comp
+						subcomponentApplicationName = applicationName
+						subcomponentProcess = \'Uninstall\'
+						applicationTierName = Tier
+					}
+				} // each component
+			} // process
+			
 		environments.each { env ->
 			tierMap env, {
 				environmentName = env
