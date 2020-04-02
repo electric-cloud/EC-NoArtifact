@@ -43,7 +43,7 @@ args.comps.split(\'\\n\').each { equal ->
 def environments = args.envs.split(",")
 
 
-def AgentHost = "localhost"
+def AgentHost = getResource(resourceName:"local").hostName
 def GroupName = "group" // Artifact group name
 def Tier = "App Tier"
 
