@@ -13,9 +13,16 @@ Instructions
 Note:
 - The deployment Stage Artifact option must be disabled for this model to work
 
+Revisions:
+- 1.0 Initial
+- 1.5 Skip component if version not supplied
+- 2.0 Support component version pull down
+
+TODO
+
+
 */
 
-project 'Default'
 catalog 'No Artifact', {
   iconUrl = null
   projectName = 'Default'
@@ -32,6 +39,7 @@ catalog 'No Artifact', {
     ]]>
   </htmlData>
 </xml>'''
+    allowScheduling = '0'
     buttonLabel = 'Create'
     catalogName = 'No Artifact'
     dslParamForm = '''{
@@ -39,7 +47,7 @@ catalog 'No Artifact', {
     "section": [{
       "name": "Application details",
       "instruction": "Provide details required to create the new application.",
-      "ec_parameterForm": "<editor> <formElement> <label>Application Name</label> <property>app</property> <documentation>Name of the application to be created.</documentation> <type>entry</type> <required>1</required> </formElement> <formElement> <label>Project Name</label> <property>projName</property> <documentation>Name of the application and environment project. e.g. \'Default\'</documentation> <type>project</type> <required>1</required> </formElement> <formElement> <label>Component Version List</label> <property>comps</property> <value>comp1=1.0\\ncomp2=2.0</value><documentation>Name of the components and versions to be created. On component per line, componentname=version</documentation> <type>textarea</type> <required>1</required> </formElement><formElement> <label>Environment List</label> <property>envs</property> <documentation>Name of environments to be created, comma separated.  E.g., Dev,Int,QA</documentation> <type>entry</type> <required>1</required> </formElement></editor>"
+      "ec_parameterForm": "<editor> <formElement> <label>Application Name</label> <property>app</property> <documentation>Name of the application to be created.</documentation> <type>entry</type> <required>1</required> </formElement> <formElement> <label>Project Name</label> <property>projName</property> <documentation>Name of the application and environment project. e.g. \'Default\'</documentation> <type>project</type> <required>1</required> </formElement> <formElement> <label>Component Version List</label> <property>comps</property> <value>comp1=1.0.1,1.0.2,1.0.3\\ncomp2=2.0.1,2.0.2,2.0.3</value><documentation>Name of the components and version options to be created. On component per line, componentname=v1,v2,v3</documentation> <type>textarea</type> <required>1</required> </formElement><formElement> <label>Environment List</label> <property>envs</property> <documentation>Name of environments to be created, comma separated.  E.g., Dev,Int,QA</documentation> <type>entry</type><value>qa,uat</value><required>1</required> </formElement></editor>"
     }],
 	"endTarget": {
       "source": "form",
@@ -77,7 +85,7 @@ project proj,{
 	
 	application app, {
 		applicationTier Tier, {
-			components.each { comp, ver ->
+			components.each { comp, versions ->
 				component comp, pluginName: null, {
 					pluginKey = \'EC-Artifact\'
 
@@ -102,12 +110,12 @@ project proj,{
 					process \'Uninstall\', {
 						applicationName = null
 						processType = \'UNDEPLOY\'
-						processStep 'Uninstall', {
-							actualParameter = [commandToRun: 'echo "Uninstalling $[/myComponent]"']
+						processStep \'Uninstall\', {
+							actualParameter = [commandToRun: \'echo "Uninstalling $[/myComponent]"\']
 							applicationTierName = null
-							processStepType = 'command'
-							subprocedure = 'RunCommand'
-							subproject = '/plugins/EC-Core/project'
+							processStepType = \'command\'
+							subprocedure = \'RunCommand\'
+							subproject = \'/plugins/EC-Core/project\'
 						}	
 					} // process
 					
@@ -141,17 +149,29 @@ project proj,{
 			process \'Deploy\', {
 				processType = \'OTHER\'
 
-				components.each { comp, ver ->
-					formalParameter "${comp}_version", defaultValue: ver
+				components.each { comp, versions ->
+					formalParameter "${comp}_version",{
+						optionsDsl = """\\
+							import com.electriccloud.domain.FormalParameterOptionsResult
+							def options = new FormalParameterOptionsResult()
+							"${versions}".split(\',\').each { ver ->
+								options.add(/*value*/ ver, /*displayString*/ ver)
+							}
+							return options
+						""".stripIndent()
+						required = \'0\'
+						type = \'select\'
+					}
 					
-					processStep 'No op', {
+					
+					processStep \'No op\', {
 						actualParameter = [
-							'commandToRun': 'echo',
+							\'commandToRun\': \'echo\',
 						]
-						applicationTierName = 'App Tier'
-						processStepType = 'command'
-						subprocedure = 'RunCommand'
-						subproject = '/plugins/EC-Core/project'
+						applicationTierName = \'App Tier\'
+						processStepType = \'command\'
+						subprocedure = \'RunCommand\'
+						subproject = \'/plugins/EC-Core/project\'
 					}					
 				
 					processStep comp, {
@@ -162,11 +182,11 @@ project proj,{
 						applicationTierName = Tier
 					}
 					
-					processDependency 'No op', targetProcessStepName: comp, {
+					processDependency \'No op\', targetProcessStepName: comp, {
 						branchCondition = "\\$[/javascript myJob[\\"${comp}_version\\"]?true:false]"
 						branchConditionName = "Run ${comp}"
-						branchConditionType = 'CUSTOM'
-						branchType = 'ALWAYS'
+						branchConditionType = \'CUSTOM\'
+						branchType = \'ALWAYS\'
 					}					
 					
 				} // each component
@@ -175,7 +195,7 @@ project proj,{
 			process \'Undeploy\', {
 				processType = \'OTHER\'
 
-				components.each { comp, ver ->
+				components.each { comp, versions ->
 					processStep comp, {
 						processStepType = \'process\'
 						subcomponent = comp
