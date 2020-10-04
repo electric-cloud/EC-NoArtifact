@@ -2,7 +2,7 @@
 
 CloudBees CD DSL: Self-service Catalog item to create an application model that updates environment inventory without an artifact version
 
-For legacy type deployments where artifacts are pushed to application servers, CloudBees CD uses the artifact version value to update environment inventory. However, when deployments are done by another tool, through an API or from a local command line you may still want to have CloudBees CD manage the deployment, updating inventory and performing other deployment tasks, for example. The generated application model can be used as the basis for these types of situations.
+For legacy type deployments where artifacts are pushed to application servers, CloudBees CD uses the artifact version value to update environment inventory. However, when deployments are done by another tool, through an API or from a local command line you may still want to have CloudBees CD manage the deployment, updating inventory and performing other deployment tasks, for example. The generated application model can be used as the basis for these types of situations. An empty procedure, "Deploy Component" is added to each component "Install" process. The procedure can be used to define the actual component deployment process.
 
 The application model created from the self-service catalog item will have as many components as specified and will accept version numbers for each of those components in the deploy process. When run, the model will perform an empty deployment which updates the environment model with the components and version data. If no version is supplied for a particular component, the component deployment will be skipped.
 
@@ -17,9 +17,9 @@ Revisions:
 - 1.0 Initial
 - 1.5 Skip component if version not supplied
 - 2.0 Support component version pull down
+- 2.1 Add empty procedure to component process
 
 TODO
-
 
 */
 
@@ -74,6 +74,12 @@ def Tier = "App Tier"
 
 project proj,{
 
+	procedure "Deploy Component",{
+		formalParameter "Application"
+		formalParameter "Component"
+		formalParameter "Version"
+	}	
+
 	environments.each { Env ->
 		environment environmentName: Env, {
 			def res = "${proj}_${Env}_${Tier}"
@@ -105,6 +111,17 @@ project proj,{
 							subprocedure = \'RunCommand\'
 							subproject = \'/plugins/EC-Core/project\'
 						}
+						processStep \'Deploy Component\', {
+							actualParameter = [
+								\'Application\': \'$[/myApplication]\',
+								\'Component\': \'$[/myComponent]\',
+								\'Version\': \'$[$[/myComponent]_version]\',
+							]
+							processStepType = \'procedure\'
+							subprocedure = \'Deploy Component\'
+							subproject = projectName
+						}
+						processDependency \'Create Artifact Placeholder\', targetProcessStepName: \'Deploy Component\'
 					} // process
 					
 					process \'Uninstall\', {
