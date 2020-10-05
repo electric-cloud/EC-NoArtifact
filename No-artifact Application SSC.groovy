@@ -14,10 +14,11 @@ Note:
 - The deployment Stage Artifact option must be disabled for this model to work
 
 Revisions:
-- 1.0 Initial
-- 1.5 Skip component if version not supplied
-- 2.0 Support component version pull down
-- 2.1 Add empty procedure to component process
+- Version 1.0 Initial
+- Version 1.5 Skip component if version not supplied
+- Version 2.0 Support component version pull down
+- Version 2.1 Add empty procedure to component process
+- Version 2.2 Pass all Application runtime values as parameters
 
 TODO
 
@@ -78,6 +79,8 @@ project proj,{
 		formalParameter "Application"
 		formalParameter "Component"
 		formalParameter "Version"
+		formalParameter "EnvironmentProject"
+		formalParameter "Environment"
 	}	
 
 	environments.each { Env ->
@@ -116,6 +119,8 @@ project proj,{
 								\'Application\': \'$[/myApplication]\',
 								\'Component\': \'$[/myComponent]\',
 								\'Version\': \'$[$[/myComponent]_version]\',
+								\'EnvironmentProject\': \'$[/myEnvironment/projectName]\',
+								\'Environment\': \'$[/myEnvironment]\',
 							]
 							processStepType = \'procedure\'
 							subprocedure = \'Deploy Component\'
