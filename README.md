@@ -1,6 +1,6 @@
 # EC-NoArtifact
 
-NOTE: the funcationality is now available in the product, https://docs.beescloud.com/docs/cloudbees-cd/latest/deploy-automation/third-party-deployment
+NOTE: the functionality is now available in the product, https://docs.beescloud.com/docs/cloudbees-cd/latest/deploy-automation/third-party-deployment
 
 CloudBees CD DSL: Self-service Catalog item to create an application model that updates environment inventory without an artifact version
 
