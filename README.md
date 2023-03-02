@@ -1,5 +1,7 @@
 # EC-NoArtifact
 
+NOTE: the funcationality is now available in the product, https://docs.beescloud.com/docs/cloudbees-cd/latest/deploy-automation/third-party-deployment
+
 CloudBees CD DSL: Self-service Catalog item to create an application model that updates environment inventory without an artifact version
 
 For legacy type deployments where artifacts are pushed to application servers, CloudBees CD uses the artifact version value to update environment inventory. However, when deployments are done by another tool, through an API or from a local command line you may still want to have CloudBees CD manage the deployment, updating inventory and performing other deployment tasks, for example. The generated application model can be used as the basis for these types of situations.
